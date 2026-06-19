@@ -17,19 +17,19 @@ export function DateRange() {
                     <div>
                         <label className="text-white/50 text-xs mb-1.5 block 
                         font-medium uppercase tracking-wider">Location</label>
-                        <Input value={""}  placeholder='City, ZIP, landmark, or "lat,lon"'/>
+                        <Input   placeholder='City, ZIP, landmark, or "lat,lon"'/>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="text-white/50 text-xs mb-1.5 block 
                             font-medium uppercase tracking-wider">Start Date</label>
-                            <Input type="date" value={""}  max={""}/>
+                            <Input type="date"  max={""}/>
                         </div>
 
                         <div>
                             <label className="text-white/50 text-xs mb-1.5 
                             block font-medium uppercase tracking-wider">End Date</label>
-                            <Input type="date" value={""} onChange={""} max={""}/>
+                            <Input type="date" onChange={""} max={""}/>
                         </div>
                     </div>
                 </div>

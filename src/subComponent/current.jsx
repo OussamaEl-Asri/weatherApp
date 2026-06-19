@@ -15,7 +15,6 @@ export function Current() {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2
                     text-white/30 text-base">🔍</span>
                     <Input 
-                    value={""}
                     placeholder='City, ZIP, "Eiffel Tower", "48.85,2.35"…'
                     className="pl-11 rounded-2xl!"></Input>
                 </div>
