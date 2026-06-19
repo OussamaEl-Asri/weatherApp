@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Current } from "../subComponent/current";
 
 function Button({icon, text, id, current, setCurrent}) {
 
@@ -56,6 +57,7 @@ export default function  Main() {
                 current={current} 
                 setCurrent={setCurrent} />
             </div>
+            <Current />
         </div>
     )
 }
