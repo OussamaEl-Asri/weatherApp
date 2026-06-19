@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { DateRange } from "../subComponent/dateRange";
-// import { Current } from "../subComponent/current";
+import { Current } from "../subComponent/current";
+import { Saved } from "../subComponent/saved";
+import { MapAndMedia } from "../subComponent/map&media";
 
 function Button({icon, text, id, current, setCurrent}) {
 
@@ -17,6 +19,19 @@ function Button({icon, text, id, current, setCurrent}) {
             <span className="hidden sm:inline">{text}</span>
         </button>
     )
+}
+
+function getCurrentUI(id) {
+    if (id == 0)
+        return <Current/>
+    if (id == 1)
+        return <DateRange />
+    if (id == 2)
+        return  <Saved />
+    if (id == 3)
+        return <MapAndMedia />
+    else 
+        return <></>
 }
 
 
@@ -58,8 +73,7 @@ export default function  Main() {
                 current={current} 
                 setCurrent={setCurrent} />
             </div>
-            {/* <Current /> */}
-            <DateRange />
+            {getCurrentUI(current)}
         </div>
     )
 }
