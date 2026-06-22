@@ -40,7 +40,7 @@ def get_date_range(
         start_date += timedelta(days=1)
 
     return model.ResponseModel(status_code=200, message=weather_response)
-        
+
 def get_weather(
         weather_input: model.WeatherInfoRequest, 
         base_url: str, 
