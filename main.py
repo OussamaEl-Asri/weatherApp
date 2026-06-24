@@ -9,6 +9,7 @@ import os
 from model import model
 from getWeather import weatherForcast
 from crud_db.insert import insert
+from crud_db.read import read
 
 import logging
 
@@ -40,10 +41,18 @@ def weather_range_date(weather_input: model.WeatherInfoRequest)-> model.Response
     return weatherForcast.get_date_range_weather(weather_input, BASE_URL, WEATHER_API)
 
 @app.post('/insert')
-def insert_db(query: list[model.WeatherResponse]):
+def insert_db(query: list[model.WeatherResponse]) -> model.ResponseModel:
     try:
         insert(query)
         return model.ResponseModel(status_code=201)
     except Exception as e:
         logger.warning(e)
         return model.ResponseModel(status_code=500, error="DataBase failed to insert the query")
+
+@app.get("/readDataBase")
+def read_db() -> model.ResponseModel:
+    try:
+        result: list[model.WeatherResponse] = read()
+        return model.ResponseModel(status_code=200, message=result)
+    except:
+        return model.ResponseModel(status_code=500, error="Failed to Fetch data from dataBase")
