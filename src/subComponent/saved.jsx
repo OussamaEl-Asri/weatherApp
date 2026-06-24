@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import GlassCard from "../glassCard/glassCard";
+import {ErrorBanner} from "./errorBanner"
 
 const EXPORTS = [
     { fmt:"json", icon:"{ }", label:"JSON" },
@@ -6,14 +8,6 @@ const EXPORTS = [
     { fmt:"xml",  icon:"</>", label:"XML" },
     { fmt:"md",   icon:"#",   label:"MD" },
 ];
-
-
-function Input({ className="", ...props }) {
-    return (
-      <input {...props}
-        className={`w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 transition ${className}`} />
-    );
-  }
   
 function Btn({ children, onClick, disabled, variant="primary", size="md", className="" }) {
     const base = "font-semibold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed";
@@ -26,9 +20,141 @@ function Btn({ children, onClick, disabled, variant="primary", size="md", classN
       accent:  "bg-blue-500/30 hover:bg-blue-500/50 active:scale-95 text-blue-100 border border-blue-400/30",
     };
     return <button onClick={onClick} disabled={disabled} className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}>{children}</button>;
+}
+
+async function readDB(setSavedRecord, setIsLoading, setError) {
+
+  try {
+    setIsLoading(true);
+    const response = await fetch("http://127.0.0.1:8000/readDataBase");
+    const data = await response.json();
+    if (response.ok && data.status_code == 200) {
+      let records = data.message;
+
+      if (!records || records?.length == 0)
+        records = null
+      setSavedRecord(records);
+    }
+  } catch (error) {
+    setError(error)
+  } finally {
+    setIsLoading(false);
   }
+}
+
+function LoadingDisplay() {
+  return (
+    <GlassCard className="py-20 text-center">
+      <div className="text-5xl mb-4 animate-bounce">
+        ⏳
+      </div>
+
+      <p className="text-white/70 font-medium">
+        Loading records...
+      </p>
+
+      <p className="text-white/30 text-sm mt-1">
+        Fetching saved weather data from the database.
+      </p>
+    </GlassCard>
+  );
+}
+
+
+function startEdit(record, setEditingDate, setEditingValue) {
+  setEditingDate(record.date);
+  setEditingValue(record.condition.text);
+}
+
+async function saveCondition(date, 
+  editingValue, 
+  setEditingValue, 
+  setEditingDate, 
+  setSavedRecord,
+  setError) {
+  try {
+    setError(null);
+    const response = await fetch(
+      "http://127.0.0.1:8000/updateCondition",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date,
+          condition_text: editingValue,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok || data.status_code != 201) {
+      console.log(data)
+      setError(data.error);
+      return 
+    }
+
+    setSavedRecord(prev =>
+      prev.map(record =>
+        record.date === date
+          ? {
+              ...record,
+              condition: {
+                ...record.condition,
+                text: editingValue,
+              },
+            }
+          : record
+      )
+    );
+    setEditingDate(null);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deleteRecord(date, setError, setSavedRecord) {
+  try {
+    setError(null);
+    const response = await fetch(
+      "http://127.0.0.1:8000/deleteRecord",
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: date,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok || data.status_code != 201) {
+      console.log(data)
+      setError(data.error);
+      return 
+    }
+    setSavedRecord(prev =>
+      prev.filter(record => record.date !== date)
+    );
+  } catch {
+    return 
+  }
+}
 
 export function Saved() {
+  const [savedRecord, setSavedRecord] = useState([]);
+  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [editingDate, setEditingDate] = useState(null);
+  const [editingValue, setEditingValue] = useState("");
+
+  useEffect(() => {
+    readDB(setSavedRecord, setIsLoading, setError);
+  }, []);
+
     return (
         <div className="space-y-4">
             <GlassCard className="p-4 flex flex-wrap items-center gap-3">
@@ -52,40 +178,107 @@ export function Saved() {
                     ))}
                 </div>
             </GlassCard>
-            {/* <div>
-                      <label className="text-white/40 text-xs mb-1 block">Notes</label>
-                      <Input value={""} onChange={"e=>setEditNotes(e.target.value)"} placeholder="Add a note…"/>
-                    </div> */}
-                    {/* <div className="flex gap-2 pt-1">
-                      <Btn onClick={"submitEdit"} variant="success" size="sm">Save Changes</Btn>
-                      <Btn onClick={"()=>setEditId(null)"} variant="ghost" size="sm">Cancel</Btn>
-                    </div> */}
+            {error && <ErrorBanner msg={error} onClose={()=>setError(null)}/> }
+        
+        {isLoading ?
+            <LoadingDisplay />
+          : savedRecord.length > 0 ?
+          savedRecord.map((d) => (
+            <div
+              key={d.date}
+              className="flex gap-4 items-start py-4 border-b border-white/10"
+            >
+              <div className="text-3xl pt-1">
+                  <img
+                    src={d.condition.icon}
+                    alt={d.condition.text}
+                    className="w-10 h-10"
+                  />
+              </div>
+          
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-white font-semibold">
+                    {d.date}
+                  </span>
+          
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{
+                      background: "rgba(59,130,246,0.2)",
+                      color: "#93c5fd",
+                    }}
+                  >
+                    Avg {d.avg_temp}°C
+                  </span>
+          
+        {
+          editingDate === d.date ? (
+          <input
+            autoFocus
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                saveCondition(d.date, 
+                  editingValue, 
+                  setEditingValue, 
+                  setEditingDate, 
+                  setSavedRecord,
+                  setError);
+              }
 
-<div className="flex gap-4 items-start">
-                    <div className="text-3xl pt-1">{"wi(r.days?.[0]?.code||1000)"}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-white font-semibold">{"r.resolvedName||r.location"}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{background:"rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.5)"}}>#{"r.id"}</span>
-                        {/* {r.avgTempC!=null&&<span className="text-xs px-2 py-0.5 rounded-full" style={{background:"rgba(59,130,246,0.2)", color:"#93c5fd"}}>~{"r.avgTempC"}°C</span>} */}
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{background:"rgba(59,130,246,0.2)", color:"#93c5fd"}}>~{"r.avgTempC"}°C</span>
-                      </div>
-                      <p className="text-white/40 text-xs">{"r.startDate"} → {"r.endDate"}</p>
-                      {/* {r.notes&&<p className="text-white/50 text-xs mt-1.5 italic">"{"r.notes"}"</p>} */}
-                      <p className="text-white/50 text-xs mt-1.5 italic">"{"r.notes"}"</p>
-                      <p className="text-white/25 text-xs mt-1">Saved {"new Date(r.savedAt).toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"})"}</p>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <Btn onClick={"()=>startEdit(r)"} variant="ghost" size="sm">✏️</Btn>
-                      <Btn onClick={"()=>deleteRecord(r.id)"} variant="danger" size="sm">🗑</Btn>
-                    </div>
-                  </div>
-            <GlassCard className="py-20 text-center">
-                <div className="text-5xl mb-4">🗃️</div>
-                <p className="text-white/50 font-medium">No saved records</p>
-                <p className="text-white/30 text-sm mt-1">Go to Date Range, fetch data, and save it.</p>
-            </GlassCard>
-
+              if (e.key === "Escape") {
+                setEditingDate(null);
+              }
+            }}
+            className="px-2 py-0.5 rounded bg-white/10 text-white text-xs border border-white/20 outline-none"
+          />
+        ) : (
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={{
+              background: "rgba(34,197,94,0.2)",
+              color: "#86efac",
+            }}
+          >
+            {d.condition.text}
+          </span>
+        )}
+                </div>
+          
+                <p className="text-white/40 text-xs">
+                  Min {d.min_temp}°C → Max {d.max_temp}°C
+                </p>
+              </div>
+          
+              <div className="flex gap-1.5 shrink-0">
+                <Btn
+                  onClick={() => startEdit(d, setEditingDate, setEditingValue)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  ✏️
+                </Btn>
+          
+                <Btn
+                  onClick={() => deleteRecord(d.date, setError, setSavedRecord)}
+                  variant="danger"
+                  size="sm"
+                >
+                  🗑
+                </Btn>
+              </div>
+            </div>
+          )
+          )
+            :
+              <GlassCard className="py-20 text-center">
+                  <div className="text-5xl mb-4">🗃️</div>
+                  <p className="text-white/50 font-medium">No saved records</p>
+                  <p className="text-white/30 text-sm mt-1">Go to Date Range, fetch data, and save it.</p>
+              </GlassCard>
+}
         </div>
     )
 }
