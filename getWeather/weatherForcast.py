@@ -3,9 +3,6 @@ from datetime import timedelta
 from util import utils
 
 import requests
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 
