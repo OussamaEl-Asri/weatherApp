@@ -65,3 +65,7 @@ class ResponseModel(BaseModel):
     status_code: int
     message: Optional[list[WeatherResponse]] | None = None
     error: Optional[str] | None = None
+    
+class UpdateConditionRequest(BaseModel):
+    date: Date
+    condition_text: str
