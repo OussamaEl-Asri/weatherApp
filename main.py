@@ -1,13 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from model.db import engine
+from sqlmodel import SQLModel
 from dotenv import load_dotenv
 import os
-import sys
+
 
 from model import model
 from getWeather import weatherForcast
+from crud_db.insert import insert
 
+import logging
 
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -15,6 +20,7 @@ BASE_URL = os.environ.get("BASE_URL")
 WEATHER_API = os.environ.get("WEATHER_API")
 
 app = FastAPI()
+SQLModel.metadata.create_all(engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,3 +38,12 @@ def current_weather(weather_input: model.WeatherInfoRequest) -> model.ResponseMo
 @app.post("/weatherDateRange")
 def weather_range_date(weather_input: model.WeatherInfoRequest)-> model.ResponseModel:
     return weatherForcast.get_date_range_weather(weather_input, BASE_URL, WEATHER_API)
+
+@app.post('/insert')
+def insert_db(query: list[model.WeatherResponse]):
+    try:
+        insert(query)
+        return model.ResponseModel(status_code=201)
+    except Exception as e:
+        logger.warning(e)
+        return model.ResponseModel(status_code=500, error="DataBase failed to insert the query")
