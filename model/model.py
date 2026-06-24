@@ -55,9 +55,9 @@ class WeatherCondition(BaseModel):
 
 class WeatherResponse(BaseModel):
     date: Optional[date] = None
-    max_temp: Optional[int] = None
-    avg_temp: Optional[int] = None
-    min_temp: Optional[int] = None
+    max_temp: Optional[float] = None
+    avg_temp: Optional[float] = None
+    min_temp: Optional[float] = None
     condition: Optional[WeatherCondition] = None
 
 
