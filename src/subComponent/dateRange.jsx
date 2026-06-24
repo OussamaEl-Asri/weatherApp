@@ -3,11 +3,13 @@ import GlassCard from "../glassCard/glassCard";
 import Input from "../input/input";
 import { ErrorBanner } from "./errorBanner";
 import { fmtDate, parseLocation } from "./utils";
+import { SuccessBanner } from "./successBanner"
 
-async function fetchDateRangeWeather(query, setIsLoding, setError, setDrResult) {
+async function fetchDateRangeWeather(query, setIsLoding, setError, setDrResult, setSuccess) {
     const location = parseLocation(query.city)
 
     setError(null)
+    setSuccess(null)
     setDrResult(null);
 
     if (!location.city){ 
@@ -48,18 +50,43 @@ async function fetchDateRangeWeather(query, setIsLoding, setError, setDrResult) 
 
 }
 
-function calcNumberOfDays(start_date, end_date) {
-    const start = new Date(start_date);
-    const end = new Date(end_date);
+async function saveRecords(query, setError, setSuccess){
+    setError(null)
+    setSuccess(null)
 
-    const diffInMs = end - start;
-    return diffInMs / (1000 * 60 * 60 * 24);
+    try {
+        const response = await fetch("http://localhost:8000/insert",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(query),
+                }
+            )
+        const data = await response.json()
+
+        if (response.ok) {
+
+            if (data.status_code == 201) {
+                setSuccess("Successed to save to DataBase")
+            } else {
+                setError("Failed to save to DataBase")
+            }
+
+        } else {
+            console.log(data)
+        }
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 export function DateRange() {
     const [isLoding, setIsLoding] = useState(false);
     const [query, setQuery] = useState({"city": "", "start_date": "", "end_date": ""})
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [drResult, setDrResult] = useState(null);
 
     return (
@@ -115,7 +142,7 @@ export function DateRange() {
                     gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => (
                         setIsLoding(true),
-                        fetchDateRangeWeather(query, setIsLoding, setError, setDrResult)
+                        fetchDateRangeWeather(query, setIsLoding, setError, setDrResult, setSuccess)
                     )}
                     >
                     {isLoding ? 
@@ -133,6 +160,7 @@ export function DateRange() {
                     ))}
                 </div>
                 {error && <div className="mt-3"><ErrorBanner msg={error} onClose={()=>setError(null)}/></div>}
+                {success && <div className="mt-3"><SuccessBanner msg={success} onClose={()=>setSuccess(null)}/></div>}
             </GlassCard>
 
             {drResult && (
@@ -148,7 +176,7 @@ export function DateRange() {
                     disabled:cursor-not-allowed bg-emerald-500/30 hover:bg-emerald-500/50 
                     active:scale-95 text-emerald-100 border px-5 py-2.5 text-sm
                     border-emerald-400/30"
-                    onClick={() => ("save Record")}
+                    onClick={() => (saveRecords(drResult, setError, setSuccess))}
                     >💾 Save to DB</button>
                 </div>
 
@@ -164,7 +192,7 @@ export function DateRange() {
                   </div>
                   <div className="rounded-2xl p-4 text-center" style={{background:"rgba(255,255,255,0.07)"}}>
                     <p className="text-white/40 text-xs mb-1">SAMPLED</p>
-                    <p className="text-white text-3xl font-bold">{calcNumberOfDays(query.start_date, query.end_date)}</p>
+                    <p className="text-white text-3xl font-bold">{drResult.length}</p>
                     <p className="text-white/40 text-xs">days</p>
                   </div>
                 </div>
