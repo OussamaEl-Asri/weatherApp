@@ -4,12 +4,14 @@ from model.db import engine
 from sqlmodel import SQLModel
 from dotenv import load_dotenv
 import os
+from datetime import date
 
 
 from model import model
 from getWeather import weatherForcast
 from crud_db.insert import insert
 from crud_db.read import read
+from crud_db.update import update
 
 import logging
 
@@ -56,3 +58,11 @@ def read_db() -> model.ResponseModel:
         return model.ResponseModel(status_code=200, message=result)
     except:
         return model.ResponseModel(status_code=500, error="Failed to Fetch data from dataBase")
+
+@app.put("/updateCondition")
+def update_condition(req: model.UpdateConditionRequest) -> model.ResponseModel:
+    try:
+        update(req.date, req.condition_text)
+        return model.ResponseModel(status_code=201)
+    except:
+        return model.ResponseModel(status_code=500, error="Failed to update the query")
