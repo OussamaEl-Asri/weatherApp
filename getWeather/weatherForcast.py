@@ -24,10 +24,10 @@ def get_date_range_weather(
 
     while start_date <= end_date:
         response = requests.get(endpoint_url + f"&dt={start_date}")
-        
-        if response.status_code != 200:
-            return model.ResponseModel(status_code=response.status_code, error=response.text)
         res = response.json()
+
+        if response.status_code != 200:
+            return model.ResponseModel(status_code=response.status_code, error=res['error']['message'])
         weather_response.extend(utils.data_modeling(res))
         start_date += timedelta(days=1)
 
@@ -43,9 +43,11 @@ def get_current_weather(
 
     response = requests.get(endpoint_url)
     
+    data = response.json()
+
     if response.status_code != 200:
-        return model.ResponseModel(status_code=response.status_code, error=response.text)
+        return model.ResponseModel(status_code=response.status_code, error=data['error']['message'])
 
     else:
-        data = utils.data_modeling(response.json())
-        return model.ResponseModel(status_code= 200, message=data)
+        modeled_data = utils.data_modeling(data)
+        return model.ResponseModel(status_code= 200, message=modeled_data)
