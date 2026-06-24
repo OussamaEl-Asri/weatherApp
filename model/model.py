@@ -69,3 +69,6 @@ class ResponseModel(BaseModel):
 class UpdateConditionRequest(BaseModel):
     date: Date
     condition_text: str
+    
+class DeleteRequest(BaseModel):
+    date: Date

@@ -1,6 +1,6 @@
 from sqlmodel import select, Session
 from model.db import engine, Model
-from model.model import ResponseModel, WeatherResponse, WeatherCondition
+from model.model import WeatherResponse, WeatherCondition
 
 import logging
 

@@ -12,6 +12,7 @@ from getWeather import weatherForcast
 from crud_db.insert import insert
 from crud_db.read import read
 from crud_db.update import update
+from crud_db.delete import delete
 
 import logging
 
@@ -66,3 +67,12 @@ def update_condition(req: model.UpdateConditionRequest) -> model.ResponseModel:
         return model.ResponseModel(status_code=201)
     except:
         return model.ResponseModel(status_code=500, error="Failed to update the query")
+
+@app.delete("/deleteRecord")
+def deleteRecord(req: model.DeleteRequest) -> model.ResponseModel:
+    try:
+        delete(req.date)
+        return model.ResponseModel(status_code=201)
+    except Exception as e:
+        logger.warning(e)
+        return model.ResponseModel(status_code=500, error="can't delete the query")
