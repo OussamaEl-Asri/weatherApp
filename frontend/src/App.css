@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100%;
+}
+
+@theme {
+    --color-start: #0f0c29;
+    --color-med: #1a1a4e;
+    --color-end: #0f0c29;
+    --color-accent: #818cf8;
+    --color-test: rgba(255, 255, 255, 0.06);
+    --color-border-radius: rgba(255, 255, 255, 0.08);
+}
