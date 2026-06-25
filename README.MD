@@ -23,8 +23,8 @@ A full-stack weather application that provides weather forecasts through a FastA
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone git@github.com:OussamaEl-Asri/weatherApp.git
+cd weatherApp
 ```
 
 ## Backend Setup
