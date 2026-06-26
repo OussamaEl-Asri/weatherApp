@@ -2,26 +2,6 @@ import { useState, useEffect } from "react";
 import GlassCard from "../glassCard/glassCard";
 import {ErrorBanner} from "./errorBanner"
 
-const EXPORTS = [
-    { fmt:"json", icon:"{ }", label:"JSON" },
-    { fmt:"csv",  icon:"⊞",  label:"CSV" },
-    { fmt:"xml",  icon:"</>", label:"XML" },
-    { fmt:"md",   icon:"#",   label:"MD" },
-];
-  
-function Btn({ children, onClick, disabled, variant="primary", size="md", className="" }) {
-    const base = "font-semibold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed";
-    const sizes = { sm:"px-3 py-1.5 text-xs", md:"px-5 py-2.5 text-sm", lg:"px-7 py-3.5 text-base" };
-    const variants = {
-      primary: "bg-white/20 hover:bg-white/30 active:scale-95 text-white border border-white/20",
-      success: "bg-emerald-500/30 hover:bg-emerald-500/50 active:scale-95 text-emerald-100 border border-emerald-400/30",
-      danger:  "bg-red-500/20 hover:bg-red-500/40 active:scale-95 text-red-200 border border-red-400/20",
-      ghost:   "hover:bg-white/10 active:scale-95 text-white/60 hover:text-white",
-      accent:  "bg-blue-500/30 hover:bg-blue-500/50 active:scale-95 text-blue-100 border border-blue-400/30",
-    };
-    return <button onClick={onClick} disabled={disabled} className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}>{children}</button>;
-}
-
 async function readDB(setSavedRecord, setIsLoading, setError) {
 
   try {
@@ -32,7 +12,7 @@ async function readDB(setSavedRecord, setIsLoading, setError) {
       let records = data.message;
 
       if (!records || records?.length == 0)
-        records = null
+        records = []
       setSavedRecord(records);
     }
   } catch (error) {
@@ -59,7 +39,6 @@ function LoadingDisplay() {
     </GlassCard>
   );
 }
-
 
 function startEdit(record, setEditingDate, setEditingValue) {
   setEditingDate(record.date);
@@ -144,6 +123,24 @@ async function deleteRecord(date, setError, setSavedRecord) {
   }
 }
 
+function exportDate(savedRecord){ 
+  const json = JSON.stringify(savedRecord, null, 2);
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "weather-data.json";
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+
 export function Saved() {
   const [savedRecord, setSavedRecord] = useState([]);
   const [error, setError] = useState(null)
@@ -163,19 +160,18 @@ export function Saved() {
                     Export:</span>
 
                 <div className="flex gap-2">
-                    {EXPORTS.map(({fmt,icon,label})=>(
-                        <button key={fmt} 
-                            className="flex items-center gap-1.5 px-3 py-1.5 
-                            rounded-xl text-xs font-semibold transition-all 
-                            hover:scale-105 active:scale-95 border"
-                            style={{
-                                background:"rgba(255,255,255,0.08)", 
-                                borderColor:"rgba(255,255,255,0.12)", 
-                                color:"rgba(255,255,255,0.7)"
-                                }}>
-                            <span className="font-mono">{icon}</span>{label}
-                        </button>
-                    ))}
+                  <button key={"json"} 
+                      className="flex items-center gap-1.5 px-3 py-1.5 
+                      rounded-xl text-xs font-semibold transition-all 
+                      hover:scale-105 active:scale-95 border"
+                      style={{
+                          background:"rgba(255,255,255,0.08)", 
+                          borderColor:"rgba(255,255,255,0.12)", 
+                          color:"rgba(255,255,255,0.7)"
+                          }}
+                      onClick={() => exportDate(savedRecord)}>
+                      <span className="font-mono">{"{ }"}</span>{"JSON"}
+                  </button>
                 </div>
             </GlassCard>
             {error && <ErrorBanner msg={error} onClose={()=>setError(null)}/> }
@@ -253,21 +249,23 @@ export function Saved() {
               </div>
           
               <div className="flex gap-1.5 shrink-0">
-                <Btn
-                  onClick={() => startEdit(d, setEditingDate, setEditingValue)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  ✏️
-                </Btn>
-          
-                <Btn
+                <button 
+                  className="hover:bg-white/10 active:scale-95 text-white/60 
+                hover:text-white px-3 py-1.5 text-xs font-semibold rounded-2xl 
+                transition-all duration-200 flex items-center justify-center gap-2 
+                disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={(() => startEdit(d, setEditingDate, setEditingValue))}
+                > ✏️ </button>
+                <button
+                  className="font-semibold rounded-2xl transition-all duration-200 
+                  flex items-center justify-center gap-2 disabled:opacity-40 
+                  disabled:cursor-not-allowed bg-red-500/20 hover:bg-red-500/40 
+                  active:scale-95 text-red-200 border border-red-400/20 px-3 py-1.5 text-xs"
                   onClick={() => deleteRecord(d.date, setError, setSavedRecord)}
-                  variant="danger"
-                  size="sm"
-                >
-                  🗑
-                </Btn>
+                  >
+                      🗑
+                </button>
+
               </div>
             </div>
           )
