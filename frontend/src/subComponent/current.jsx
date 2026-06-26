@@ -6,11 +6,6 @@ import { SkeletonCard } from "./skeletonCard";
 import { fmtDate, parseLocation } from "./utils";
 
 
-// fetched from the data base
-const QUICK = ["New York","London","Tokyo","Sydney","Dubai","Paris","Cairo","Mumbai"];
-
-
-
 async function fetchCurrentWeather(query, setData, setIsLoding, setError) {
     const location = parseLocation(query)
     setData(null)
@@ -59,6 +54,7 @@ export function Current() {
     const [data, setData] = useState(null);
     const [error, setError] = useState("");
     const [query, setQuery] = useState("");
+    const [quick, setQuick] = useState([])
 
     return (
         <div className="space-y-4">
@@ -83,6 +79,10 @@ export function Current() {
                     border border-white/2 rounded-2xl px-5 py-2.5 text-sm
                     active:scale-95 text-white"
                     onClick={() => (setIsLoding(true), 
+                        setQuick(
+                            (prev) => 
+                            prev.includes(query) ? prev : [...prev, query]
+                        ),
                         fetchCurrentWeather(query, setData, setIsLoding, setError))}
                 
                 >{isLoding ? <span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>⟳</span> : "Search"}</button>
@@ -90,15 +90,16 @@ export function Current() {
             </div>
             {/* latest searched */}
             <div className="flex gap-2 flex-wrap">
-                {QUICK.map(c=>(
+                {quick.map(c=>(
                 <button 
-                    key={c} 
+                    // key={c} 
                     className="text-xs px-3 py-1.5 rounded-xl border 
                         transition-all duration-150 hover:scale-105 active:scale-95"
                     style={{
                         borderColor:"rgba(255,255,255,0.12)", 
                         background:"rgba(255,255,255,0.07)", 
                         color:"rgba(255,255,255,0.6)"}}
+                    onClick={() => (setQuery(c))}
                 >
                     {c}
                 </button>
