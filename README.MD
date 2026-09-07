@@ -2,6 +2,9 @@
 
 A full-stack weather application that provides weather forecasts through a FastAPI backend and a React-based frontend.
 
+## Demo
+https://github.com/user/repo/assets/lRecodDemo.mov
+
 ## Tech Stack
 
 ### Backend
